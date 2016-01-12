@@ -3,26 +3,19 @@ import planetWarsAPI.GameClient;
 import planetWarsAPI.Planet;
 import planetWarsAPI.PlanetWars;
 
-/**
- * FearlessBot
- * An attempt of smarter bot
- * It attacks to the strongest enemy planet with its weakest planet
+/* FearlessBot
+ * An attempt of smarter bot that attacks 
+ * to the strongest enemy planet with its weakest planet
  * The power is computed based on the number of ships.
- * <p>
- *
- * @author Hugo Brandao
+ * @author Evangelos Daniil - edl320
  */
 
 public class FearlessBot implements Bot {
-
-    /**
-     * Function that gets called every turn.
-     *
-     * @param pw The game state
+    /** Function that gets called every turn.
+     *  @param pw The game state
      */
     public void doTurn(PlanetWars pw) {
-
-		//find planets according to the reckless heuristics
+	//find planets according to the fearless heuristics
         Planet source = findMyWeakestPlanet(pw);
         Planet dest = findEnemyStrongestPlanet(pw);
 
@@ -32,6 +25,7 @@ public class FearlessBot implements Bot {
         }
     }
 
+    //finds our weakest planet 
     private Planet findMyWeakestPlanet(PlanetWars pw) {
         Planet weakestPlanet = null;
         double weakestScore = Double.MAX_VALUE;
@@ -51,13 +45,14 @@ public class FearlessBot implements Bot {
         return weakestPlanet;
     }
 
+    //finds enemy's strongest planet
     private Planet findEnemyStrongestPlanet(PlanetWars pw) {
         Planet strongestEnemyPlanet = null;
         double strongestEnemyScore = Double.MIN_VALUE;
 
         for (Planet planet : pw.getEnemyPlanets()) {            
             double score = (double) planet.getNumShips();
-   
+
             if (score > strongestEnemyScore) {
                 strongestEnemyScore = score;
                 strongestEnemyPlanet = planet;
