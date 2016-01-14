@@ -16,15 +16,15 @@ import planetWarsAPI.PlanetWars;
 
 public class minimaxBot implements Bot {
 
-    StateSpace root;
+    StateSpace state;
 
     public void doTurn(PlanetWars pw) {
         SimulatedPlanetWars spw = new SimulatedPlanetWars(pw);
 
         //check if we already created the StateSpace
-        if(root == null){
+        if(state == null){
             //1 for max player
-            root = new StateSpace(spw, 1, 0, null);
+            state = new StateSpace(spw, 1, 0, null);
         } 
         
         
@@ -66,9 +66,10 @@ public class minimaxBot implements Bot {
     	int playerID;
     	int depth;
     	int score = 20;
+    	int [] operator;
 
-    	StateSpace(SimulatedPlanetWars spw, int player, int nodeDepth, StateSpace parent){
-
+    	StateSpace(SimulatedPlanetWars spw, int player, int nodeDepth, StateSpace parent, int[] operator){
+    		this.operator = operator;
     		this.spw = spw;
     		this.playerID = player;
     		this.depth = nodeDepth; 
@@ -80,24 +81,17 @@ public class minimaxBot implements Bot {
 
     		if(spw.getWinner() != 0){
     			ArrayList<SimulatedPlanetWars> simulations = new ArrayList<>();
-
-    			for(int[] operator : operatorsList) {
-    				SimulatedPlanetWars x = spw.clone();
-    				x.simulateAttack(player, spw.getPlanet(operator[0]), spw.getPlanet(operator[1]));
-    				x.simulateGrowth();
-    				simulations.add(x);
-    			}
+    			children = new ArrayList<StateSpace>();
     			
     			if(this.playerID == 1) this.playerID = 2;
     			if(this.playerID == 2) this.playerID = 1;
-    			
-    			children = new ArrayList<StateSpace>();
-    			for(SimulatedPlanetWars simulation: simulations) {
-    				children.add(new StateSpace(simulation, playerID, this.depth + 1, this));
-    				//difference of ships /ratio
-    				
-    			}
-    			
+    			    			
+    			for(int[] op : operatorsList) {
+    				SimulatedPlanetWars simulation = spw.clone();
+    				simulation.simulateAttack(player, spw.getPlanet(op[0]), spw.getPlanet(op[1]));
+    				simulation.simulateGrowth();
+    				children.add(new StateSpace(simulation, playerID, this.depth + 1, this, op));
+    			}    			    		    			
     		}
     	}
     
