@@ -24,7 +24,7 @@ public class minimaxBot implements Bot {
         //check if we already created the StateSpace
         if(state == null){
             //1 for max player
-            state = new StateSpace(spw, 1, 0, null);
+            state = new StateSpace(spw, 1, 0, null, null);
         } 
         
         
@@ -80,12 +80,11 @@ public class minimaxBot implements Bot {
     		} else this.parent = parent;
 
     		if(spw.getWinner() != 0){
-    			ArrayList<SimulatedPlanetWars> simulations = new ArrayList<>();
-    			children = new ArrayList<StateSpace>();
     			
     			if(this.playerID == 1) this.playerID = 2;
     			if(this.playerID == 2) this.playerID = 1;
-    			    			
+    			
+    			children = new ArrayList<StateSpace>();    			
     			for(int[] op : operatorsList) {
     				SimulatedPlanetWars simulation = spw.clone();
     				simulation.simulateAttack(player, spw.getPlanet(op[0]), spw.getPlanet(op[1]));
@@ -95,7 +94,6 @@ public class minimaxBot implements Bot {
     		}
     	}
     
-
     	void buildOperators(){
     		List<Planet> planetList = spw.getAllPlanets();
 
