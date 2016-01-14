@@ -19,38 +19,71 @@ public class minimaxBot implements Bot {
     StateSpace state;
 
     public void doTurn(PlanetWars pw) {
-        SimulatedPlanetWars spw = new SimulatedPlanetWars(pw);
-
+        
         //check if we already created the StateSpace
         if(state == null){
+        	SimulatedPlanetWars spw = new SimulatedPlanetWars(pw);
             //1 for max player
             state = new StateSpace(spw, 1, 0, null, null);
         } 
         
+        updateState(pw);
+                
         
-        
-        
-        
-        
-        
-        
+        //chose best heuristic for next move
+        int maxEval = Integer.MIN_VALUE;
+        int[] bestMove;
+        for (StateSpace st : state.parent.children) {
+        	if (st.score > maxEval) {
+        		bestMove = st.operator;
+        	}
+        }               
         
         //minimaxAlgorithm();
     }
-
-    //STILL HAVE TO IMPLEMENT THE MAX AND THE MIN METHODS 
-    int minimaxAlgorithm(Node StateSpace, int depth){
-        //if there are no other children
-        if(StateSpace.children.size() == 0){
-            return StateSpace.score;
-
-            //if the bot is playing then return the MIN of minimaxAlgorithm
-        } else if(StateSpace.playerID == 1){
-            return minimaxAlgorithm(StateSpace, depth-1);
+    
+    //discover to which children state the game has evolved after opponent's move
+    //NOTE: although it looks scary to see all this nested for loops, it will be worst case
+    // 8*8*branching_of_parent iterations. 8 because we only have maps with up to 8 planets
+    private void updateState(PlanetWars pw) {
+    	if (state.parent != null) {        	        	        	
+        	loop1:
+        	for (StateSpace st : state.parent.children) {
+        		boolean stateMatch = false;
+        		loop2:
+        		for (Planet spl : st.spw.getAllPlanets()) {
+        			for (Planet pl : pw.getAllPlanets()) {
+        				if (spl.getID() == pl.getID()) {
+        					if (spl.getNumShips() == pl.getNumShips() && spl.getOwner() == pl.getOwner()) {
+        						stateMatch = true;
+        					} else {
+        						stateMatch = false;
+        						break loop2;
+        					}
+        				}
+        			}
+        		}
+        		if (stateMatch) {
+        			state = st;
+        			break loop1;
+        		}
+        	}
         }
-        //if the bot is playing then return the MAX of minimaxAlgorithm 
-        return minimaxAlgorithm(StateSpace, depth-1);
     }
+    
+    //STILL HAVE TO IMPLEMENT THE MAX AND THE MIN METHODS 
+//    int minimaxAlgorithm(Node StateSpace, int depth){
+//        //if there are no other children
+//        if(StateSpace.children.size() == 0){
+//            return StateSpace.score;
+//
+//            //if the bot is playing then return the MIN of minimaxAlgorithm
+//        } else if(StateSpace.playerID == 1){
+//            return minimaxAlgorithm(StateSpace, depth-1);
+//        }
+//        //if the bot is playing then return the MAX of minimaxAlgorithm 
+//        return minimaxAlgorithm(StateSpace, depth-1);
+//    }
 
 
     public static void main(String[] args) {
