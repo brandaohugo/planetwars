@@ -3,6 +3,8 @@
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import planetWarsAPI.Bot;
 import planetWarsAPI.GameClient;
@@ -98,6 +100,7 @@ public class minimaxBot implements Bot {
     			
     		}
     	}
+    
 
     	void buildOperators(){
     		List<Planet> planetList = spw.getAllPlanets();
@@ -120,7 +123,199 @@ public class minimaxBot implements Bot {
     			this.operatorsList = operators; 
     		}
     	}
+    
+        }
+    
+    private class SimulatedPlanetWars {
+
+        List<Planet> planets = new ArrayList<Planet>();
+
+        public SimulatedPlanetWars(PlanetWars pw) {
+            for (Planet planet : pw.getAllPlanets()) {
+                planets.add(planet);
+            }
+        }
+        
+        public SimulatedPlanetWars(List<Planet> allPlanets) {
+            this.planets = allPlanets;
+            }
+              
+        public SimulatedPlanetWars clone(){
+    		List<Planet> allPlanets = new ArrayList<Planet>();
+
+    		for(Planet planet : this.getAllPlanets()) {
+    			Planet newPlanet = new Planet(planet.getID(), planet.getOwner(), planet.getNumShips(), planet.getGrowthRate(), planet.getX(), planet.getY());
+    			allPlanets.add(newPlanet);
+    		}
+    		return new SimulatedPlanetWars(allPlanets);
+    	}
+
+        public void simulateGrowth() {
+            for (Planet p : planets) {
+
+                if (p.getOwner() == 0)
+                    continue;
+
+                Planet newPlanet = new Planet(p.getID(), p.getOwner(), p.getNumShips() + p.getGrowthRate(),
+                    p.getGrowthRate(), p.getX(), p.getY());
+
+                planets.set(p.getID(), newPlanet);
+            }
+        }
+
+        public void simulateAttack(int player, Planet source, Planet dest) {
+            if (source != null && dest != null) {
+                if (source.getOwner() != player) {
+                    return;
+                }
+
+                // Simulate attack
+                int remnantFleet = dest.getNumShips() - source.getNumShips() / 2;
+                int owner = dest.getOwner();
+
+                if (remnantFleet < 0)
+                    owner = player;
+
+                Planet newSource = new Planet(source.getID(), source.getOwner(), source.getNumShips() / 2,
+                    source.getGrowthRate(), source.getX(), source.getY());
+                Planet newDest = new Planet(dest.getID(), owner, Math.abs(remnantFleet),
+                    dest.getGrowthRate(), dest.getX(), dest.getY());
+
+                planets.set(source.getID(), newSource);
+                planets.set(dest.getID(), newDest);
+            }
+        }
+
+        public void simulateAttack(Planet source, Planet dest) {
+            simulateAttack(1, source, dest);
+        }
+
+        public void simulateBullyBotAttack() {
+            Planet source = null;
+            Planet dest = null;
+
+            double sourceScore = Double.MIN_VALUE;
+            double destScore = Double.MAX_VALUE;
+
+            for (Planet planet : planets) {
+
+                if (planet.getOwner() == PlanetWars.ENEMY) {
+                    if (planet.getNumShips() <= 1) continue;
+                    double scoreMax = (double) planet.getNumShips();
+                    if (scoreMax > sourceScore) {
+                        sourceScore = scoreMax;
+                        source = planet;
+                    }
+                }
+
+                // (2) Find the weakest enemy or neutral planet.
+                if (planet.getOwner() != PlanetWars.ENEMY) {
+                    double scoreMin = (double) (planet.getNumShips());
+                    if (scoreMin < destScore) {
+                        destScore = scoreMin;
+                        dest = planet;
+                    }
+                }
+
+            }
+
+            // (3) Simulate attack
+            if (source != null && dest != null) {
+                simulateAttack(2, source, dest);
+            }
+
+        }
+
+        public int numPlanets() {
+            return planets.size();
+        }
+
+        public Planet getPlanet(int planetID) {
+            return planets.get(planetID);
+        }
+
+        public List<Planet> getAllPlanets() {
+            return planets;
+        }
+
+        public List<Planet> getMyPlanets() {
+            List<Planet> r = new ArrayList<Planet>();
+
+            for (Planet p : planets)
+                if (p.getOwner() == PlanetWars.PLAYER)
+                    r.add(p);
+
+            return r;
+        }
+
+        public List<Planet> getNeutralPlanets() {
+            List<Planet> r = new ArrayList<Planet>();
+
+            for (Planet p : planets)
+                if (p.getOwner() == PlanetWars.NEUTRAL)
+                    r.add(p);
+
+            return r;
+        }
+
+        public List<Planet> getEnemyPlanets() {
+            List<Planet> r = new ArrayList<Planet>();
+
+            for (Planet p : planets)
+                if (p.getOwner() >= PlanetWars.ENEMY)
+                    r.add(p);
+
+            return r;
+        }
+
+        public List<Planet> getNotMyPlanets() {
+            List<Planet> r = new ArrayList<Planet>();
+
+            for (Planet p : planets)
+                if (p.getOwner() != PlanetWars.PLAYER)
+                    r.add(p);
+
+            return r;
+        }
+
+        public boolean isPlayerAlive(int player) {
+            for (Planet p : planets)
+                if (p.getOwner() == player)
+                    return true;
+
+            return false;
+        }
+
+        public int getWinner() {
+            Set<Integer> remainingPlayers = new TreeSet<Integer>();
+            for (Planet p : planets)
+                remainingPlayers.add(p.getOwner());
+
+            switch (remainingPlayers.size()) {
+                case 0:
+                    return 0;
+                case 1:
+                    return (Integer) remainingPlayers.toArray()[0];
+                default:
+                    return -1;
+            }
+        }
+
+        public int getNumShips(int player) {
+            int numShips = 0;
+
+            for (Planet p : planets)
+                if (p.getOwner() == player)
+                    numShips += p.getNumShips();
+
+            return numShips;
+        }
+
+        public void issueOrder(Planet source, Planet dest) {
+            simulateAttack(source, dest);
+        }
     }
+
 }
 
 
